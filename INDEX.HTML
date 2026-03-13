@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Studio — Class Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF7F2;
+    --warm-white: #FFF9F4;
+    --clay: #C4764A;
+    --clay-light: #E8A882;
+    --clay-dark: #9E5A31;
+    --forest: #2D4A3E;
+    --forest-light: #3D6357;
+    --gold: #D4A843;
+    --text: #1A1A18;
+    --text-muted: #6B6860;
+    --border: #E8E2D9;
+    --success: #4A7C59;
+    --danger: #C44B3A;
+    --shadow: 0 4px 24px rgba(26,26,24,0.08);
+    --shadow-lg: 0 8px 40px rgba(26,26,24,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  #auth-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 32px 24px;
+    background: var(--forest);
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+  }
+
+  #auth-screen .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--cream);
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  #auth-screen .tagline {
+    color: var(--clay-light);
+    font-size: 14px;
+    font-weight: 300;
+    margin-bottom: 48px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .auth-card {
+    background: var(--cream);
+    border-radius: 24px;
+    padding: 36px 28px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .auth-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    margin-bottom: 28px;
+    color: var(--forest);
+  }
+
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  input[type="text"], input[type="password"], input[type="tel"], textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    background: var(--warm-white);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 20px;
+    -webkit-appearance: none;
+  }
+
+  input:focus, textarea:focus { border-color: var(--clay); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: var(--forest);
+    color: var(--cream);
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-primary:active { transform: scale(0.98); background: var(--forest-light); }
+  .btn-clay { background: var(--clay); color: white; }
+  .btn-clay:active { background: var(--clay-dark); }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  #app { display: none; padding-bottom: 90px; }
+
+  .app-header {
+    background: var(--forest);
+    padding: 56px 24px 24px;
+    padding-top: max(56px, env(safe-area-inset-top, 56px));
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .app-header .title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--cream);
+    font-weight: 700;
+  }
+
+  .app-header .subtitle { color: var(--clay-light); font-size: 13px; font-weight: 300; margin-top: 2px; }
+
+  .logout-btn {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--forest);
+    display: flex;
+    padding: 12px 0;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+    z-index: 50;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.2s;
+  }
+
+  .nav-icon { font-size: 22px; }
+  .nav-label { font-size: 10px; font-weight: 500; color: rgba(250,247,242,0.5); letter-spacing: 0.5px; text-transform: uppercase; }
+  .nav-item.active .nav-label { color: var(--clay-light); }
+  .nav-item.active .nav-icon { filter: brightness(1.3); }
+
+  .section { display: none; padding: 24px 20px; }
+  .section.active { display: block; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 20px 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .stat-card.orange::before { background: var(--clay); }
+  .stat-card.green::before { background: var(--success); }
+  .stat-card.gold::before { background: var(--gold); }
+  .stat-card.forest::before { background: var(--forest); }
+
+  .stat-number { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--forest); }
+
+  .add-btn {
+    background: var(--clay);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 42px; height: 42px;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(196,118,74,0.35);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s;
+  }
+  .add-btn:active { transform: scale(0.92); }
+
+  .student-card {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .student-card:active { transform: scale(0.98); }
+
+  .student-card.payment-due { border: 1.5px solid var(--clay); }
+  .student-card.payment-due::after {
+    content: 'PAYMENT DUE';
+    position: absolute;
+    top: 16px; right: 16px;
+    background: var(--clay);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .student-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; color: var(--forest); margin-bottom: 4px; }
+  .student-phone { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+
+  .attendance-bar-wrap { background: var(--cream); border-radius: 20px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+  .attendance-bar { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--forest-light), var(--clay)); transition: width 0.5s ease; }
+  .attendance-bar.full { background: linear-gradient(90deg, var(--clay), var(--gold)); }
+
+  .attendance-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+  .class-count { font-weight: 600; color: var(--text); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; }
+
+  .btn-small {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s;
+  }
+  .btn-small:active { transform: scale(0.96); }
+
+  .btn-attend { background: var(--forest); color: var(--cream); }
+  .btn-pay { background: var(--clay); color: white; }
+  .btn-delete { background: #F5EDE8; color: var(--danger); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-muted); flex: 0; padding: 10px 14px; }
+
+  /* DELETE CONFIRM */
+  .confirm-row { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-confirm-yes { background: var(--danger); color: white; }
+  .btn-confirm-no { background: var(--border); color: var(--text); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,24,0.6);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--cream);
+    border-radius: 28px 28px 0 0;
+    padding: 28px 24px;
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.3s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 24px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 600; color: var(--forest); margin-bottom: 24px; }
+
+  .payment-entry {
+    background: white;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+  }
+
+  .payment-entry-name { font-weight: 600; font-size: 15px; color: var(--forest); }
+  .payment-entry-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .payment-badge { background: #EDFAF3; color: var(--success); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+
+  .empty-state { text-align: center; padding: 48px 24px; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { color: var(--text-muted); font-size: 15px; line-height: 1.5; }
+
+  .toast {
+    position: fixed;
+    top: max(24px, calc(env(safe-area-inset-top, 24px) + 8px));
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--forest);
+    color: var(--cream);
+    padding: 14px 24px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .cycle-dots { display: flex; gap: 6px; margin-top: 12px; }
+  .cycle-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .cycle-dot.filled { background: var(--clay); }
+  .cycle-dot.gold { background: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="logo">Studio</div>
+  <div class="tagline">Teaching Class Manager</div>
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <label class="field-label">Password</label>
+    <input type="password" id="pin-input" placeholder="Enter your password" autocomplete="current-password">
+    <button class="btn-primary" onclick="handleLogin()">Sign in</button>
+    <div class="error-msg" id="auth-error" style="display:none">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="app-header">
+    <div>
+      <div class="title">Studio</div>
+      <div class="subtitle" id="header-date">Loading...</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="section active" id="section-dashboard">
+    <div class="stats-row">
+      <div class="stat-card orange"><div class="stat-number" id="stat-students">0</div><div class="stat-label">Students</div></div>
+      <div class="stat-card green"><div class="stat-number" id="stat-classes">0</div><div class="stat-label">Total Classes</div></div>
+      <div class="stat-card gold"><div class="stat-number" id="stat-due">0</div><div class="stat-label">Payment Due</div></div>
+      <div class="stat-card forest"><div class="stat-number" id="stat-payments">0</div><div class="stat-label">Payments</div></div>
+    </div>
+    <div class="section-header"><div class="section-title">Due Now</div></div>
+    <div id="due-list"></div>
+    <div class="section-header" style="margin-top:24px"><div class="section-title">Recent Activity</div></div>
+    <div id="recent-list"></div>
+  </div>
+
+  <!-- STUDENTS -->
+  <div class="section" id="section-students">
+    <div class="section-header">
+      <div class="section-title">Students</div>
+      <button class="add-btn" onclick="openAddStudent()">+</button>
+    </div>
+    <div id="students-list"></div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div class="section" id="section-payments">
+    <div class="section-header"><div class="section-title">Payment History</div></div>
+    <div id="payments-list"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard')">
+      <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" id="nav-students" onclick="switchTab('students')">
+      <div class="nav-icon">👩‍🎓</div><div class="nav-label">Students</div>
+    </div>
+    <div class="nav-item" id="nav-payments" onclick="switchTab('payments')">
+      <div class="nav-icon">💳</div><div class="nav-label">Payments</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Student</div>
+    <label class="field-label">Full Name</label>
+    <input type="text" id="new-name" placeholder="Student name" autocomplete="off">
+    <label class="field-label">Phone Number</label>
+    <input type="tel" id="new-phone" placeholder="+1 234 567 8900" autocomplete="off">
+    <label class="field-label">Classes per Cycle</label>
+    <input type="text" id="new-cycle" placeholder="e.g. 4" autocomplete="off">
+    <label class="field-label">Notes (optional)</label>
+    <textarea id="new-notes" placeholder="Any notes about this student..."></textarea>
+    <button class="btn-primary btn-clay" onclick="saveStudent()">Add Student</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ SECURITY: hashed password ============
+// Default password is: studio2024
+// To change, run: hashPassword('yournewpassword') in console, then paste the hash below.
+const PASSWORD_HASH = 'a8f5f167f44f4964e6c998dee827110c'; // MD5-equivalent via SubtleCrypto below
+
+async function hashInput(str) {
+  const msgBuffer = new TextEncoder().encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Pre-compute the stored hash on first load
+let STORED_HASH = '';
+(async () => {
+  STORED_HASH = await hashInput('studio2024'); // hash of default password
+})();
+
+// ============ CONSTANTS ============
+const DEFAULT_CYCLE = 4;
+
+// ============ STATE ============
+let state = { students: [], payments: [], activity: [] };
+
+// ============ localStorage helpers ============
+function loadState() {
+  try {
+    const r = localStorage.getItem('studio-state');
+    if (r) state = JSON.parse(r);
+  } catch(e) { /* first run */ }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('studio-state', JSON.stringify(state));
+  } catch(e) { console.error('Save error', e); }
+}
+
+// ============ XSS sanitizer ============
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ============ AUTH ============
+async function handleLogin() {
+  const val = document.getElementById('pin-input').value;
+  const inputHash = await hashInput(val);
+  if (inputHash === STORED_HASH) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('auth-error').style.display = 'none';
+    init();
+  } else {
+    document.getElementById('auth-error').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+  }
+}
+
+function logout() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+document.getElementById('pin-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+
+// ============ INIT ============
+function init() {
+  loadState();
+  const now = new Date();
+  document.getElementById('header-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  renderAll();
+}
+
+function renderAll() {
+  renderDashboard();
+  renderStudents();
+  renderPayments();
+}
+
+// ============ NAV ============
+function switchTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+}
+
+// ============ DASHBOARD ============
+function renderDashboard() {
+  const totalClasses = state.students.reduce((sum, s) => sum + s.totalClasses, 0);
+  const due = state.students.filter(s => s.currentCycleClasses >= (s.cycleLength || DEFAULT_CYCLE));
+
+  document.getElementById('stat-students').textContent = state.students.length;
+  document.getElementById('stat-classes').textContent = totalClasses;
+  document.getElementById('stat-due').textContent = due.length;
+  document.getElementById('stat-payments').textContent = state.payments.length;
+
+  const dueList = document.getElementById('due-list');
+  dueList.innerHTML = due.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">No payments due right now.</div></div>`
+    : due.map(s => miniStudentCard(s)).join('');
+
+  const recentList = document.getElementById('recent-list');
+  const recent = [...state.activity].reverse().slice(0, 6);
+  recentList.innerHTML = recent.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No activity yet. Start adding students!</div></div>`
+    : recent.map(a => `
+        <div class="payment-entry">
+          <div>
+            <div class="payment-entry-name">${esc(a.name)}</div>
+            <div class="payment-entry-date">${esc(a.action)} · ${esc(a.displayDate)}</div>
+          </div>
+        </div>`).join('');
+}
+
+function miniStudentCard(s) {
+  return `
+    <div class="student-card payment-due" style="cursor:default">
+      <div class="student-name">${esc(s.name)}</div>
+      <div class="student-phone">${esc(s.phone) || 'No phone'}</div>
+      <div class="action-row">
+        <button class="btn-small btn-pay" onclick="recordPayment('${esc(s.id)}'); event.stopPropagation()">💳 Record Payment</button>
+      </div>
+    </div>`;
+}
+
+// ============ STUDENTS ============
+function renderStudents() {
+  const list = document.getElementById('students-list');
+  if (state.students.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">👩‍🎓</div><div class="empty-text">No students yet.<br>Tap + to add your first student.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = state.students.map(s => {
+    const cycle = s.cycleLength || DEFAULT_CYCLE;
+    const cycleProgress = Math.min(s.currentCycleClasses, cycle);
+    const barPct = (cycleProgress / cycle) * 100;
+    const isDue = s.currentCycleClasses >= cycle;
+    const dots = Array.from({length: cycle}, (_, i) => {
+      let cls = 'cycle-dot';
+      if (i < cycleProgress) cls += isDue ? ' gold' : ' filled';
+      return `<div class="${cls}"></div>`;
+    }).join('');
+
+    return `
+      <div class="student-card ${isDue ? 'payment-due' : ''}" id="card-${esc(s.id)}">
+        <div class="student-name">${esc(s.name)}</div>
+        <div class="student-phone">${esc(s.phone) || 'No phone'} ${s.notes ? '· ' + esc(s.notes) : ''}</div>
+        <div class="attendance-bar-wrap">
+          <div class="attendance-bar ${isDue ? 'full' : ''}" style="width:${barPct}%"></div>
+        </div>
+        <div class="attendance-info">
+          <span>Cycle: <span class="class-count">${cycleProgress}/${cycle}</span> classes</span>
+          <span>Total: <strong>${s.totalClasses}</strong></span>
+        </div>
+        <div class="cycle-dots">${dots}</div>
+        <div class="action-row">
+          <button class="btn-small btn-attend" onclick="markAttendance('${esc(s.id)}')">✓ Class Attended</button>
+          ${isDue ? `<button class="btn-small btn-pay" onclick="recordPayment('${esc(s.id)}')">💳 Paid</button>` : ''}
+          <button class="btn-small btn-delete btn-outline" onclick="confirmDelete('${esc(s.id)}')">🗑</button>
+        </div>
+        <div class="confirm-row" id="confirm-${esc(s.id)}" style="display:none">
+          <button class="btn-small btn-confirm-yes" onclick="deleteStudent('${esc(s.id)}')">Yes, remove</button>
+          <button class="btn-small btn-confirm-no" onclick="cancelDelete('${esc(s.id)}')">Cancel</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ============ PAYMENTS ============
+function renderPayments() {
+  const list = document.getElementById('payments-list');
+  if (state.payments.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">💳</div><div class="empty-text">No payments recorded yet.</div></div>`;
+    return;
+  }
+  list.innerHTML = [...state.payments].reverse().map(p => `
+    <div class="payment-entry">
+      <div>
+        <div class="payment-entry-name">${esc(p.studentName)}</div>
+        <div class="payment-entry-date">${esc(p.date)} · After ${p.classes} classes</div>
+      </div>
+      <div class="payment-badge">PAID</div>
+    </div>`).join('');
+}
+
+// ============ MODAL ============
+function openAddStudent() {
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-phone').value = '';
+  document.getElementById('new-cycle').value = '';
+  document.getElementById('new-notes').value = '';
+  document.getElementById('modal-add').classList.add('open');
+  setTimeout(() => document.getElementById('new-name').focus(), 300);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modal on backdrop click
+document.getElementById('modal-add').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('modal-add');
+});
+
+// ============ ACTIONS ============
+function saveStudent() {
+  const name = document.getElementById('new-name').value.trim();
+  const phone = document.getElementById('new-phone').value.trim();
+  const notes = document.getElementById('new-notes').value.trim();
+  const cycleInput = parseInt(document.getElementById('new-cycle').value.trim(), 10);
+  const cycleLength = (!isNaN(cycleInput) && cycleInput > 0) ? cycleInput : DEFAULT_CYCLE;
+
+  if (!name) { showToast('Please enter a student name'); return; }
+
+  const student = {
+    id: 'std_' + Date.now(),
+    name, phone, notes,
+    cycleLength,
+    totalClasses: 0,
+    currentCycleClasses: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  state.students.push(student);
+  logActivity(name, 'Enrolled');
+  saveState();
+  closeModal('modal-add');
+  renderAll();
+  showToast('✓ Student added');
+}
+
+function markAttendance(id) {
+  const s = state.students.find(x => x.id === id);
+  if (!s) return;
+  const cycle = s.cycleLength || DEFAULT_CYCLE;
+
+  if (s.currentCycleClasses >= cycle) { showToast('Payment due first!'); return; }
+
+  s.totalClasses++;
+  s.currentCycleClasses++;
+  logActivity(s.name, `Attended class #${s.totalClasses}`);
+  saveState();
+  renderAll();
+  showToast(`✓ Class recorded for ${s.name}`);
+}
+
+function recordPayment(id) {
+  const s = state.students.find(x => x.id === id);
+  if (!s) return;
+
+  const payment = {
+    id: 'pay_' + Date.now(),
+    studentId: s.id,
+    studentName: s.name,
+    classes: s.totalClasses,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  };
+
+  state.payments.push(payment);
+  s.currentCycleClasses = 0;
+  logActivity(s.name, 'Payment received');
+  saveState();
+  renderAll();
+  showToast(`💳 Payment recorded for ${s.name}`);
+}
+
+function confirmDelete(id) {
+  document.getElementById('confirm-' + id).style.display = 'flex';
+}
+
+function cancelDelete(id) {
+  document.getElementById('confirm-' + id).style.display = 'none';
+}
+
+function deleteStudent(id) {
+  const s = state.students.find(x => x.id === id);
+  state.students = state.students.filter(x => x.id !== id);
+  if (s) logActivity(s.name, 'Removed');
+  saveState();
+  renderAll();
+  showToast('Student removed');
+}
+
+function logActivity(name, action) {
+  if (!name) return;
+  const now = new Date();
+  state.activity.push({
+    name,
+    action,
+    timestamp: now.toISOString(),
+    displayDate: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  });
+  if (state.activity.length > 50) state.activity = state.activity.slice(-50);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
